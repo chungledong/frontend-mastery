@@ -182,3 +182,4 @@ if (orderForm) {
   });
 }
 // Cập nhật tính năng LocalStorage lên Vercel
+console.log("Phiên bản V2 - Đã có Local Storage");
