@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Frontend Mastery - Tech Lead Training</title>
+  </head>
+  <body>
+    <nav class="bg-white border-b border-gray-200 sticky top-0 z-50">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-between h-16">
+      
+      <div class="flex items-center">
+        <span class="text-2xl font-bold text-blue-600">TechAdmin</span>
+      </div>
+
+      <div class="hidden md:flex items-center space-x-8">
+        <a href="#" class="text-gray-900 font-medium hover:text-blue-600 transition-colors">Tổng quan</a>
+        <a href="#" class="text-gray-500 hover:text-blue-600 transition-colors">Sản phẩm</a>
+        <a href="#" class="text-gray-500 hover:text-blue-600 transition-colors">Khách hàng</a>
+        <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+          Đăng xuất
+        </button>
+      </div>
+
+      <div class="flex items-center md:hidden">
+        <button id="mobile-menu-btn" class="text-gray-500 hover:text-gray-700 focus:outline-none p-2">
+          <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="mobile-menu" class="hidden md:hidden border-t border-gray-100 bg-gray-50">
+    <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+      <a href="#" class="block px-3 py-2 rounded-md text-base font-medium text-blue-600 bg-blue-50">Tổng quan</a>
+      <a href="#" class="block px-3 py-2 rounded-md text-base font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-100">Sản phẩm</a>
+      <a href="#" class="block px-3 py-2 rounded-md text-base font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-100">Khách hàng</a>
+      <a href="#" class="block px-3 py-2 rounded-md text-base font-medium text-red-500 hover:bg-red-50">Đăng xuất</a>
+    </div>
+  </div>
+</nav>
+
+  <main class="min-h-screen w-full bg-gray-50 p-8 font-sans">
+    
+    <header class="mb-8">
+      <h1 class="text-3xl font-bold text-gray-800">Tổng quan kinh doanh</h1>
+      <p class="text-gray-500 mt-1">Báo cáo hiệu suất ngày hôm nay</p>
+    </header>
+
+    <section 
+  id="stats-container" 
+  class="grid grid-cols-1 md:grid-cols-3 gap-6"
+>
+  </section>
+
+  <section class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+      
+      <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">Thêm đơn hàng mới</h2>
+        
+        <form id="order-form" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Tên khách hàng</label>
+            <input 
+              type="text" 
+              id="customer-name"
+              placeholder="Ví dụ: Nguyễn Văn A"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+            />
+            <p id="name-error" class="text-red-500 text-sm mt-1 hidden">Vui lòng nhập tên khách hàng!</p>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Giá trị đơn hàng (VNĐ)</label>
+            <input 
+              type="number" 
+              id="order-amount"
+              placeholder="0"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+            />
+            <p id="amount-error" class="text-red-500 text-sm mt-1 hidden">Số tiền phải lớn hơn 0!</p>
+          </div>
+
+          <button 
+            type="submit"
+            class="w-full bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 active:scale-95 transition-all"
+          >
+            Lưu đơn hàng
+          </button>
+        </form>
+      </div>
+
+      <div class="bg-gray-800 p-6 rounded-2xl text-gray-300 font-mono text-sm">
+        <h3 class="text-white font-bold mb-2 border-b border-gray-600 pb-2">Console Log (Kết quả):</h3>
+        <div id="result-log">Chưa có dữ liệu...</div>
+      </div>
+
+    </section>
+
+    <section class="mt-8 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <div class="p-6 border-b border-gray-100">
+        <h2 class="text-xl font-bold text-gray-800">Danh sách đơn hàng gần đây</h2>
+      </div>
+      
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="bg-gray-50 text-gray-600 text-sm uppercase tracking-wider">
+              <th class="p-4 font-semibold">ID</th>
+              <th class="p-4 font-semibold">Khách hàng</th>
+              <th class="p-4 font-semibold">Ngày tạo</th>
+              <th class="p-4 font-semibold">Trạng thái</th>
+              <th class="p-4 font-semibold text-right">Số tiền</th>
+            </tr>
+          </thead>
+          
+          <tbody id="order-table-body" class="divide-y divide-gray-100">
+            <tr>
+              <td colspan="5" class="p-8 text-center text-gray-400">
+                Chưa có đơn hàng nào. Hãy thêm mới!
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
