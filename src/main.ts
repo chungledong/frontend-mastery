@@ -69,22 +69,42 @@ if (container) {
   container.innerHTML = htmlContent;
 }
 
-// --- PHẦN 3: XỬ LÝ FORM & VALIDATION ---
+// ... (Giữ nguyên các phần import và code ở trên) ...
 
-// 1. Khởi tạo mảng dữ liệu rỗng (State)
-const orders: Order[] = []; 
+// --- PHẦN 3: QUẢN LÝ ĐƠN HÀNG (CRUD + LOCAL STORAGE) ---
 
-// 2. Lấy element
+// 1. Định nghĩa tên chìa khóa để lưu trong kho
+const STORAGE_KEY = 'my_app_orders';
+
+// 2. 🔥 MỚI: Hàm lấy dữ liệu từ kho (Load Data)
+const loadOrders = (): Order[] => {
+  const savedData = localStorage.getItem(STORAGE_KEY);
+  if (savedData) {
+    // Nếu có dữ liệu, biến nó từ String trở lại thành Array
+    return JSON.parse(savedData);
+  }
+  return []; // Nếu chưa có gì, trả về mảng rỗng
+};
+
+// 3. 🔥 MỚI: Khởi tạo mảng orders bằng dữ liệu trong kho (thay vì mảng rỗng [])
+const orders: Order[] = loadOrders();
+
+// 4. Lấy element
 const orderForm = document.getElementById('order-form') as HTMLFormElement;
 const nameInput = document.getElementById('customer-name') as HTMLInputElement;
 const amountInput = document.getElementById('order-amount') as HTMLInputElement;
 const tableBody = document.getElementById('order-table-body');
 
-// 3. Hàm render (Vẽ lại bảng dựa trên dữ liệu hiện có)
+// 5. 🔥 MỚI: Hàm lưu dữ liệu vào kho (Save Data)
+const saveOrdersToStorage = () => {
+  // Biến Array thành String để nhét vào LocalStorage
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(orders));
+};
+
+// 6. Hàm render (Vẽ lại bảng - Giữ nguyên logic cũ)
 const renderOrders = () => {
   if (!tableBody) return;
 
-  // Nếu mảng rỗng -> Hiện thông báo
   if (orders.length === 0) {
     tableBody.innerHTML = `
       <tr>
@@ -96,8 +116,6 @@ const renderOrders = () => {
     return;
   }
 
-  // Nếu có dữ liệu -> Map ra HTML
-  // Tư duy Clean Code: Tách hàm xử lý màu sắc status ra
   const getStatusColor = (status: string) => {
     if (status === 'Completed') return 'bg-green-100 text-green-700';
     if (status === 'Processing') return 'bg-blue-100 text-blue-700';
@@ -125,7 +143,11 @@ const renderOrders = () => {
   tableBody.innerHTML = html;
 };
 
-// 4. Xử lý Submit Form (Logic thêm mới)
+// 7. 🔥 MỚI: Gọi render ngay lần đầu tiên mở web
+// Để nếu trong kho có dữ liệu cũ thì hiện ra ngay
+renderOrders();
+
+// 8. Xử lý Submit Form
 if (orderForm) {
   orderForm.addEventListener('submit', (event) => {
     event.preventDefault();
@@ -133,29 +155,28 @@ if (orderForm) {
     const name = nameInput.value.trim();
     const amount = Number(amountInput.value);
     
-    // Validation đơn giản (như bài trước)
     if (name.length === 0 || amount <= 0) {
       alert("Vui lòng nhập đúng thông tin!");
       return;
     }
 
-    // TẠO DỮ LIỆU MỚI (Create)
     const newOrder: Order = {
-      id: Date.now(), // Dùng thời gian làm ID tạm
+      id: Date.now(),
       customerName: name,
       amount: amount,
-      status: 'Processing', // Mặc định là đang xử lý
-      date: new Date().toLocaleDateString('vi-VN') // Ngày hiện tại
+      status: 'Processing',
+      date: new Date().toLocaleDateString('vi-VN')
     };
 
     // Thêm vào mảng (State Update)
     orders.push(newOrder); // Đẩy vào cuối danh sách
-    // Hoặc dùng: orders.unshift(newOrder); // Nếu muốn đẩy lên đầu
+    
+    // 🔥 MỚI: Lưu ngay vào ổ cứng
+    saveOrdersToStorage();
 
-    // GỌI HÀM VẼ LẠI GIAO DIỆN (UI Update)
+    // Vẽ lại giao diện
     renderOrders();
 
-    // Reset Form
     orderForm.reset();
     nameInput.focus();
   });
