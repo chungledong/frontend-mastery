@@ -1,8 +1,9 @@
-// 1. Nhúng file CSS vào (để Vite biết đường tải Tailwind)
+// 1. Nhúng file CSS và Import thư viện
 import './style.css'
-import type { StatItem , Order} from './types'; // Nhập khuôn mẫu vào
- 
-/// --- PHẦN 1: LOGIC MENU (Giữ nguyên code cũ của bạn ở đây) ---
+import type { StatItem, Order } from './types';
+import Chart from 'chart.js/auto'; // 🔥 Import Chart.js
+
+// --- PHẦN 1: LOGIC MENU ---
 const menuBtn = document.getElementById('mobile-menu-btn');
 const mobileMenu = document.getElementById('mobile-menu');
 if (menuBtn && mobileMenu) {
@@ -11,9 +12,7 @@ if (menuBtn && mobileMenu) {
   });
 }
 
-// --- PHẦN 2: LOGIC DỮ LIỆU ĐỘNG (Mới) ---
-
-// 1. Giả lập dữ liệu từ Server trả về (Mock Data)
+// --- PHẦN 2: LOGIC DỮ LIỆU THỐNG KÊ (MOCK DATA) ---
 const statistics: StatItem[] = [
   {
     id: 1,
@@ -38,19 +37,15 @@ const statistics: StatItem[] = [
   },
   {
     id: 4,
-    label: "Tỉ lệ hoàn đơn", // Thử thêm thẻ thứ 4 để thấy sức mạnh
+    label: "Tỉ lệ hoàn đơn",
     value: "2.4%",
     colorClass: "text-red-600 bg-red-100",
     iconPath: "M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
   }
 ];
 
-// 2. Tìm thẻ chứa (Container)
 const container = document.querySelector<HTMLElement>('#stats-container');
-
-// 3. Hàm render (Vẽ HTML từ dữ liệu)
 if (container) {
-  // Dùng hàm map để biến đổi từng cục Data thành chuỗi HTML
   const htmlContent = statistics.map(item => `
     <article class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg hover:bg-gray-50 transition-shadow duration-300 flex items-center space-x-4">
       <div class="p-3 rounded-full ${item.colorClass}">
@@ -63,45 +58,113 @@ if (container) {
         <h3 class="text-2xl font-bold text-gray-800">${item.value}</h3>
       </div>
     </article>
-  `).join(''); // Gộp tất cả thành 1 chuỗi lớn
-
-  // Gán vào DOM
+  `).join('');
   container.innerHTML = htmlContent;
 }
 
-// ... (Giữ nguyên các phần import và code ở trên) ...
+// --- PHẦN 3: QUẢN LÝ ĐƠN HÀNG (CRUD + LOCAL STORAGE + CHART) ---
 
-// --- PHẦN 3: QUẢN LÝ ĐƠN HÀNG (CRUD + LOCAL STORAGE) ---
-
-// 1. Định nghĩa tên chìa khóa để lưu trong kho
 const STORAGE_KEY = 'my_app_orders';
 
-// 2. 🔥 MỚI: Hàm lấy dữ liệu từ kho (Load Data)
+// Hàm lấy dữ liệu từ kho
 const loadOrders = (): Order[] => {
   const savedData = localStorage.getItem(STORAGE_KEY);
   if (savedData) {
-    // Nếu có dữ liệu, biến nó từ String trở lại thành Array
     return JSON.parse(savedData);
   }
-  return []; // Nếu chưa có gì, trả về mảng rỗng
+  return [];
 };
 
-// 3. 🔥 MỚI: Khởi tạo mảng orders bằng dữ liệu trong kho (thay vì mảng rỗng [])
+// Khởi tạo mảng orders
 const orders: Order[] = loadOrders();
 
-// 4. Lấy element
+// Lấy element
 const orderForm = document.getElementById('order-form') as HTMLFormElement;
 const nameInput = document.getElementById('customer-name') as HTMLInputElement;
 const amountInput = document.getElementById('order-amount') as HTMLInputElement;
 const tableBody = document.getElementById('order-table-body');
 
-// 5. 🔥 MỚI: Hàm lưu dữ liệu vào kho (Save Data)
+// Hàm lưu dữ liệu vào kho
 const saveOrdersToStorage = () => {
-  // Biến Array thành String để nhét vào LocalStorage
   localStorage.setItem(STORAGE_KEY, JSON.stringify(orders));
 };
 
-// 6. Hàm render (Vẽ lại bảng - Giữ nguyên logic cũ)
+// --- PHẦN 4: HÀM VẼ BIỂU ĐỒ (Đưa lên trước để dùng được trong renderOrders) ---
+let myChart: Chart | null = null;
+
+const renderChart = () => {
+  const canvas = document.getElementById('myChart') as HTMLCanvasElement;
+  if (!canvas) return;
+
+  // Tính toán dữ liệu
+  const processingCount = orders.filter(o => o.status === 'Processing').length;
+  const completedCount = orders.filter(o => o.status === 'Completed').length;
+  const cancelledCount = orders.filter(o => o.status === 'Cancelled').length;
+
+  // Xóa biểu đồ cũ nếu có
+  if (myChart) {
+    myChart.destroy();
+  }
+
+  // Vẽ biểu đồ mới
+  myChart = new Chart(canvas, {
+    type: 'doughnut',
+    data: {
+      labels: ['Đang xử lý', 'Hoàn thành', 'Đã hủy'],
+      datasets: [{
+        label: 'Số lượng đơn',
+        data: [processingCount, completedCount, cancelledCount],
+        backgroundColor: [
+          '#3b82f6', // Xanh dương
+          '#22c55e', // Xanh lá
+          '#ef4444'  // Đỏ
+        ],
+        borderWidth: 0,
+        hoverOffset: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom'
+        }
+      }
+    }
+  });
+};
+
+// --- PHẦN 5: RENDER GIAO DIỆN CHÍNH ---
+
+// Hàm xử lý logic xóa
+const deleteOrder = (idToDelete: number) => {
+  const isConfirmed = confirm('Bạn có chắc chắn muốn xóa đơn hàng này không?');
+  if (!isConfirmed) return;
+
+  const index = orders.findIndex(order => order.id === idToDelete);
+  
+  if (index !== -1) {
+    orders.splice(index, 1);
+    saveOrdersToStorage();
+    renderOrders(); // Sẽ tự động gọi renderChart bên trong
+  }
+};
+
+// Hàm chuyển đổi trạng thái: Processing -> Completed -> Cancelled -> Processing
+const toggleStatus = (idToToggle: number) => {
+  const order = orders.find(o => o.id === idToToggle);
+  if (order) {
+    if (order.status === 'Processing') order.status = 'Completed';
+    else if (order.status === 'Completed') order.status = 'Cancelled';
+    else order.status = 'Processing';
+
+    // Lưu và vẽ lại
+    saveOrdersToStorage();
+    renderOrders();
+  }
+};
+// Hàm render bảng (Và gọi Chart)
 const renderOrders = () => {
   if (!tableBody) return;
 
@@ -113,6 +176,8 @@ const renderOrders = () => {
         </td>
       </tr>
     `;
+    // Vẫn gọi renderChart kể cả khi không có đơn (để hiện biểu đồ rỗng hoặc xóa biểu đồ cũ)
+    renderChart(); 
     return;
   }
 
@@ -126,28 +191,47 @@ const renderOrders = () => {
     const formattedMoney = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(order.amount);
     
     return `
-      <tr class="hover:bg-gray-50 transition-colors">
+      <tr class="hover:bg-gray-50 transition-colors group">
         <td class="p-4 text-gray-500">#${order.id}</td>
         <td class="p-4 font-medium text-gray-900">${order.customerName}</td>
         <td class="p-4 text-gray-500 text-sm">${order.date}</td>
         <td class="p-4">
-          <span class="px-3 py-1 rounded-full text-xs font-bold ${getStatusColor(order.status)}">
+          <span 
+            class="status-btn cursor-pointer select-none px-3 py-1 rounded-full text-xs font-bold ${getStatusColor(order.status)} hover:opacity-80 transition-opacity"
+            data-id="${order.id}"
+            title="Click để đổi trạng thái"
+          >
             ${order.status}
           </span>
         </td>
-        <td class="p-4 text-right font-bold text-gray-800">${formattedMoney}</td>
+        <td class="p-4 text-right">
+          <div class="flex items-center justify-end gap-3">
+            <span class="font-bold text-gray-800">${formattedMoney}</span>
+            <button 
+              class="delete-btn bg-red-100 text-red-600 p-2 rounded-lg hover:bg-red-200 transition-colors opacity-0 group-hover:opacity-100"
+              data-id="${order.id}"
+              title="Xóa đơn hàng này"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+            </button>
+          </div>
+        </td>
       </tr>
     `;
   }).join('');
 
   tableBody.innerHTML = html;
+
+  // 🔥 QUAN TRỌNG: Vẽ lại biểu đồ mỗi khi bảng thay đổi
+  renderChart();
 };
 
-// 7. 🔥 MỚI: Gọi render ngay lần đầu tiên mở web
-// Để nếu trong kho có dữ liệu cũ thì hiện ra ngay
+// Gọi render ngay lần đầu tiên
 renderOrders();
 
-// 8. Xử lý Submit Form
+// --- PHẦN 6: XỬ LÝ SỰ KIỆN ---
+
+// Xử lý Submit Form
 if (orderForm) {
   orderForm.addEventListener('submit', (event) => {
     event.preventDefault();
@@ -168,18 +252,33 @@ if (orderForm) {
       date: new Date().toLocaleDateString('vi-VN')
     };
 
-    // Thêm vào mảng (State Update)
-    orders.push(newOrder); // Đẩy vào cuối danh sách
-    
-    // 🔥 MỚI: Lưu ngay vào ổ cứng
+    orders.push(newOrder); 
     saveOrdersToStorage();
-
-    // Vẽ lại giao diện
-    renderOrders();
+    renderOrders(); // Tự động cập nhật cả bảng và biểu đồ
 
     orderForm.reset();
     nameInput.focus();
   });
 }
-// Cập nhật tính năng LocalStorage lên Vercel
-console.log("Phiên bản V2 - Đã có Local Storage");
+// Lắng nghe sự kiện Xóa (Event Delegation)
+if (tableBody) {
+  tableBody.addEventListener('click', (event) => {
+    const target = event.target as HTMLElement;
+
+    // 1. Xử lý nút XÓA (Logic cũ)
+    const deleteButton = target.closest('.delete-btn') as HTMLButtonElement;
+    if (deleteButton) {
+      const id = Number(deleteButton.dataset.id);
+      deleteOrder(id);
+      return; // Dừng lại không chạy tiếp
+    }
+
+    // 2. 🔥 MỚI: Xử lý nút ĐỔI TRẠNG THÁI
+    const statusButton = target.closest('.status-btn') as HTMLElement;
+    if (statusButton) {
+      const id = Number(statusButton.dataset.id);
+      toggleStatus(id);
+    }
+  });
+}
+
